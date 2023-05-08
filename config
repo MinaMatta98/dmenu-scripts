@@ -1,0 +1,43 @@
+#!/usr/bin/bash
+configs1=("$(ls -a -A ~/Downloads/dmenu_scripts/ | xargs -n1)")
+configs2=("$(ls -a -A ~/Downloads/dwmscripts/ | xargs -n1)")
+configs3=("$(dir -x ~/.config/ | xargs -n1)")
+configs=("${configs1[@]} ${configs2[@]} ${configs3[@]}")
+config="$( echo ${configs[@]} | xargs -n1 | dmenu -i -p 'Select config directory  ')" || exit
+
+if [ -z $config ]
+then
+exit
+else
+	if [[ "${configs1[@]}" =~ "$config" ]]
+	then
+	step=1
+	path="Downloads/dmenu_scripts"
+	elif [[ "${configs2[@]}" =~ "$config" ]]
+	then
+	step=1
+	path="Downloads/dwmscripts"
+	else
+	step=$(ls -a -A ~/.config/$config | wc -l)
+	path=".config"
+	fi
+
+if [ $(bc <<<"$step == 1") -ge 1 ]
+then
+
+if [[ "${configs3[@]}" =~ "$config" ]]
+then
+	config="$config/*"
+fi
+alacritty -e nvim ~/$path/$config
+else
+
+choice="$(dir -x ~/$path/$config | xargs -n1 | sort | dmenu -i -p 'select config file 什')"
+alacritty -e nvim ~/$path/$config/$choice
+fi
+fi
+
+
+
+
+ 

@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+
+process="$(ps -e | awk '{print $4}' | sort | uniq | dmenu -i -p 'Select process to kill 什 ')" || exit
+
+if [ -z $process ]
+then
+exit
+else
+pkill $process
+fi
+
+
+
+
+ 

@@ -1,0 +1,73 @@
+#!/usr/bin/bash
+
+BROWSER="firefox"
+
+declare -a options=(
+	"Google" 
+	"Youtube"
+	"Canvas - Engineering Economics and Finance"
+	"Canvas - Geotechnical Engineering"
+	"Canvas - Engineering Entrepeneurship and Commercialisation"
+	"Canvas - Construction"
+)
+
+declare -a headers=(
+	"home"
+	"modules"
+	"announcements"
+	"assignments"
+	"quizzes"
+	"grades"
+)
+
+
+enginelist=$(printf '%s\n' "${options[@]}" | dmenu -i -l 20 -p 'Choose a search Engine:') || exit
+
+if test "$enginelist" = "Google";  
+then	Sengine="https://google.com/search?q=" 
+while [ -z "$query" ]; do
+	query=$(dmenu -i -l 20 -p "Searching $enginelist:") || exit
+done
+$BROWSER "$Sengine""$query"
+
+elif test "$enginelist" = "Youtube";
+then	Sengine="https://www.youtube.com/results?search_query="
+while [ -z "$query" ]; do
+	query=$(dmenu -i -l 20 -p "Searching $enginelist:") || exit
+done
+$BROWSER "$Sengine""$query"
+
+elif test "$enginelist" = "Canvas - Engineering Economics and Finance";	
+then Sengine="https://canvas.uts.edu.au/courses/16769"
+	while [ -z "$query" ]; do
+	query=$(printf '%s\n' "${headers[@]}" | dmenu -i -l 20 -p "Searching $enginelist:") || exit
+$BROWSER "$Sengine""/$query"
+done
+
+elif test "$enginelist" = "Canvas - Geotechnical Engineering";
+then	Sengine="https://canvas.uts.edu.au/courses/16721"
+	while [ -z "$query" ]; do
+	query=$(printf '%s\n' "${headers[@]}" | dmenu -i -l 20 -p "Searching $enginelist:") || exit
+$BROWSER "$Sengine""/$query"
+done
+
+elif test "$enginelist" = "Canvas - Engineering Entrepeneurship and Commercialisation";
+then	Sengine="https://canvas.uts.edu.au/courses/16775"
+	while [ -z "$query" ]; do
+	query=$(printf '%s\n' "${headers[@]}" | dmenu -i -l 20 -p "Searching $enginelist:") || exit
+$BROWSER "$Sengine""/$query"
+done
+
+elif test "$enginelist" = "Canvas - Construction";
+then	Sengine="https://canvas.uts.edu.au/courses/16716"
+	while [ -z "$query" ]; do
+	query=$(printf '%s\n' "${headers[@]}" | dmenu -i -l 20 -p "Searching $enginelist:") || exit
+$BROWSER "$Sengine""/$query"
+done
+else 	Sengine=0 ;
+fi
+
+
+
+
+ 

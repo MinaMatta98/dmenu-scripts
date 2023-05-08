@@ -1,0 +1,12 @@
+#/bin/sh
+
+if [ ! -z $(pgrep xcompmgr) ]
+then
+    notify-send -t 1 "Turning xcompmgr OFF"
+    pkill xcompmgr &
+else
+    notify-send -t 1 "Turning xcompmgr ON"
+    xcompmgr
+fi
+
+exit 0

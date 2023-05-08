@@ -1,0 +1,123 @@
+#!/usr/bin/bash
+
+output() {
+	output=$(find /home/mina/.password-store/ | grep -v "gpg-id" | grep .gpg | awk -F "/" '{print $NF}' | sed s/.gpg//g | sed 's/^/🗝️  /g' | /home/mina/.config/rofi/launchers/type-9/launcher.sh "Select 🗝️ from the following:" "$@")
+	result=$(echo "$output" | sed 's/🗝️  //g')
+	echo "$result"
+}
+
+show() {
+	output=$(output "")
+	declare -A otp=(["Aws-Mina-Matta"]=1 ["SoP-BDR-Sandpit"]=1 ["Xero"]=1)
+
+	if [[ "${otp[$output]}" ]] && [[ -n "$output" ]]; then
+		clipctl disable
+		eval pass otp -c "$output"
+		clipctl enable
+
+	elif [ -n "$output" ]; then
+		clipctl disable
+		eval pass show -c "$output"
+		clipctl enable
+	fi
+}
+
+remove() {
+	output=$(output "-theme-str" 'element selected.normal {background-color: #E06C75FF;}')
+	if [[ -n "$output" ]]; then
+		assurance=$(echo "Are you sure you wish to delete the password for $output?" | /home/mina/.config/rofi/launchers/type-9/launcher.sh "Type Yes for confirmation:" '-theme-str' 'element selected.normal {background-color: #E06C75FF;} listview {lines: 1;} elements {text-align: center;}')
+		if [[ $assurance == "Yes" ]]; then
+			pass rm "$output"
+			notify-send "Password for $output has been deleted"
+		else
+			notify-send "Password Deletion Ignored"
+			return
+		fi
+	fi
+}
+
+insert() {
+	options=('Standard Password' 'OTP MFA Authentication')
+	IFS=$'\n'
+	# echo "${options[*]}"
+
+	method=$(printf "%s\n" "${options[@]}" | /home/mina/.config/rofi/launchers/type-9/launcher.sh "Type of Password 🗝️:" "-theme-str" 'listview {lines: 2;}')
+	IFS=$'\n'
+	echo "$method"
+
+	if [[ "$method" == 'OTP MFA Authentication' ]]; then
+		modification="otp"
+		passreq1="Enter otpauth URI for 🗝️:"
+		passreq2="Retype otpauth URI for 🗝️:"
+	else
+		modification=""
+		passreq1="Enter Password 🗝️:"
+		passreq2="Retype Password 🗝️:"
+	fi
+
+	if [[ -n "$method" ]]; then
+		input=$(~/.config/rofi/launchers/type-9/launcher.sh "Name of Password 🗝️:" "-theme-str" 'listview {enabled:false;}')
+
+		if [ "$input" = "" ]; then
+			notify-send "Exiting"
+			return
+		fi
+
+		options=('Random Password' 'Typed Password')
+
+		method=$(printf "%s\n" "${options[@]}" | /home/mina/.config/rofi/launchers/type-9/launcher.sh "Method of Password Insertion 🗝️:" "-theme-str" 'listview {lines: 2;}')
+
+		if [ "$method" == "Random Password" ]; then
+			password=$(
+				tr -dc 'A-Za-z0-9!"#$%&'\''()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 13
+				echo
+			)
+		fi
+
+		pass1=$(
+			~/.config/rofi/launchers/type-9/launcher.sh "$passreq1" "-theme-str" 'listview {enabled:false;}' &
+			(
+				sleep 0.15s
+			) && echo "type $password" | xdotool - && wait $!
+		)
+
+		if [ "$pass1" = "" ]; then
+			notify-send "Password not entered, exiting"
+			return
+		fi
+
+		if ! [ "$method" == "Random Password" ]; then
+			pass2=$(~/.config/rofi/launchers/type-9/launcher.sh "$passreq2" "-theme-str" 'listview {enabled:false;}')
+		else
+			pass2="$pass1"
+		fi
+
+		if [ "$pass2" = "" ]; then
+			notify-send "Password not entered, exiting"
+			return
+		fi
+
+		if [ "$pass1" != "$pass2" ]; then
+			notify-send "Password are not the same, exiting."
+
+		else
+			notify-send "Password has been Stored"
+		fi
+
+		/home/mina/Downloads/dmenu_scripts/password "$input" "$pass1" "$pass2" "$modification"
+	else
+		return 1
+	fi
+}
+
+options=('Copy Password' 'Insert Password' 'Remove Password')
+
+IFS=$'\n'
+echo "${options[*]}"
+choice=$(printf '%s\n' "${options[@]}" | /home/mina/.config/rofi/launchers/type-9/launcher.sh "Choose Password Handling  : " "-theme-str" 'listview {lines: 3;}')
+
+case "$choice" in
+"Copy Password") show ;;
+"Insert Password") insert ;;
+"Remove Password") remove ;;
+esac

@@ -1,0 +1,20 @@
+#!/usr/bin/bash
+
+ cardnum="$(pacmd list cards | grep -B 5 Jabra | grep index | awk '{ print $2}')"
+ declare -a options3=(
+ 	"Audio"
+	"Microphone"
+	"Reset"
+)
+
+use="$(printf '%s\n' "${options3[@]}" | dmenu -i -l 20 -p "Declare the purpose of your headset:")" || exit
+
+if test "$use" = "Audio" ;
+then Mod="a2dp_sink";
+elif test "$use" = "Reset" ;
+then bluetoothctl disconnect '70:BF:92:C7:06:15';
+else Mod="headset_head_unit";
+fi
+
+pacmd set-card-profile "$cardnum" "$Mod"
+

@@ -1,0 +1,65 @@
+#!/usr/bin/bash
+
+declare -a options1=(
+	"Yes"
+	"No"
+)
+
+Activity="$(sudo systemctl status bluetooth | grep "Active: inactive (dead)")"
+
+if test -z "$Activity";	
+	then echo "$Activity";
+	else sudo systemctl start bluetooth;
+fi
+
+Power="$(bluetoothctl show | grep "Powered: yes")"
+
+if test -z "$Power";
+	then bluetoothctl power on;
+	else echo "already on";
+fi
+
+scan=$(printf '%s\n' "${options1[@]}" | dmenu -i -l 20 -p 'Is scanning needed?') || exit
+
+Discovery="$(bluetoothctl show | grep "Discovering: yes")"
+
+if test "$scan" = "Yes";
+   then 
+   if test -z "$Discovery";
+	then bluetoothctl scan on &
+	else echo "scanning on";
+   fi
+   else echo "not needed";
+fi
+
+device="$( (echo "Not Showing?" && bluetoothctl devices | awk -v n=3 '{ for (i=n; i<=NF; i++) printf "%s%s", $i, (i<NF ? OFS : ORS)}') | dmenu -i -l 20 -p 'Select device')" || exit
+
+while [ "$device" = "Not Showing?" ]; do
+	device="$( (echo "Not Showing?" && bluetoothctl devices | awk -v n=3 '{ for (i=n; i<=NF; i++) printf "%s%s", $i, (i<NF ? OFS : ORS)}')| dmenu -i -l 20 -p 'Select device')" || exit
+done
+
+pair="$(bluetoothctl paired-devices | grep "$device")"
+address="$(bluetoothctl devices | grep "$device" | awk '{ print $2 }')"
+	
+if test "$device" = "Jabra Elite 75t" ;
+	then address="70:BF:92:C7:06:15" ;
+else "$address" = "$address";
+	fi
+
+connected="$(bluetoothctl info "$address" | grep "Connected: yes")"
+
+if test -z "$connected";
+	then if test -z "$pair";
+		then option2=$(printf '%s\n' "${options1[@]}" | dmenu -i -l 20 -p 'The device is not paired, would you like to pair it?') || exit
+	if test "$option2" = "Yes";
+		then bluetoothctl pair "$address";
+		else echo "Opted out of pairing";
+	fi
+else echo "Already Paired";
+fi
+
+	bluetoothctl connect "$address";
+	notify-send "$(bluetoothctl info "$address" | grep "Connected")";
+else notify-send "Already Connected"
+fi
+killall bluetoothctl
